@@ -1,0 +1,571 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.4.1008.15138",
+      "templateHash": "10451446506799526629"
+    }
+  },
+  "parameters": {
+    "app-sp-1Name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "app-sp-1SkuName": {
+      "type": "string",
+      "defaultValue": "F1",
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    "app-sp-2Name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sku": {
+      "type": "string",
+      "defaultValue": "Developer",
+      "allowedValues": [
+        "Developer",
+        "Standard",
+        "Premium"
+      ],
+      "metadata": {
+        "description": "The pricing tier of this API Management service"
+      }
+    },
+    "skuCount": {
+      "type": "int",
+      "defaultValue": 1,
+      "allowedValues": [
+        1,
+        2
+      ],
+      "metadata": {
+        "description": "The instance size of this API Management service."
+      }
+    },
+    "publisherEmail": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The email address of the owner of the service"
+      }
+    },
+    "publisherName": {
+      "type": "string",
+      "minLength": 1,
+      "metadata": {
+        "description": "The name of the owner of the service"
+      }
+    },
+    "app-sp-2SkuName": {
+      "type": "string",
+      "defaultValue": "F1",
+      "allowedValues": [
+        "F1",
+        "D1",
+        "B1",
+        "B2",
+        "B3",
+        "S1",
+        "S2",
+        "S3",
+        "P1",
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "metadata": {
+        "description": "Describes plan's pricing tier and capacity. Check details at https://azure.microsoft.com/en-us/pricing/details/app-service/"
+      }
+    },
+    "sql-server-1AdminLogin": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sql-server-1AdminLoginPassword": {
+      "type": "securestring"
+    },
+    "db-11Name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "db-11Collation": {
+      "type": "string",
+      "minLength": 1,
+      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+    },
+    "db-11Edition": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "Standard",
+        "Premium"
+      ]
+    },
+    "db-11RequestedServiceObjectiveName": {
+      "type": "string",
+      "defaultValue": "Basic",
+      "allowedValues": [
+        "Basic",
+        "S0",
+        "S1",
+        "S2",
+        "P1",
+        "P2",
+        "P3"
+      ],
+      "metadata": {
+        "description": "Describes the performance level for Edition"
+      }
+    },
+    "stor11Type": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_ZRS",
+        "Standard_GRS",
+        "Standard_RAGRS",
+        "Premium_LRS"
+      ]
+    }
+
+
+  },
+  "variables": {
+    "web-1Name": "[concat('web-1', uniqueString(resourceGroup().id))]",
+    "web-2Name": "[concat('web-2', uniqueString(resourceGroup().id))]",
+    "sql-server-1Name": "[concat('sql-server-1', uniqueString(resourceGroup().id))]",
+    "stor11Name": "[concat('stor11', uniqueString(resourceGroup().id))]"
+
+  },
+  "resources": [
+    {
+      "name": "[parameters('app-sp-1Name')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "sku": {
+        "name": "[parameters('app-sp-1SkuName')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "app-sp-1"
+      },
+      "properties": {
+        "name": "[parameters('app-sp-1Name')]",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "name": "[parameters('app-sp-2Name')]",
+      "type": "Microsoft.Web/serverfarms",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "sku": {
+        "name": "[parameters('app-sp-2SkuName')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "app-sp-2"
+      },
+      "properties": {
+        "name": "[parameters('app-sp-2Name')]",
+        "numberOfWorkers": 1
+      }
+    },
+    {
+      "name": "[variables('web-1Name')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name')))]": "Resource",
+        "displayName": "web-1"
+      },
+      "properties": {
+        "name": "[variables('web-1Name')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]"
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('web-1Name'))]"
+          ],
+          "tags": {
+            "displayName": "app-st-1"
+          },
+          "properties": {
+            "key1": "value1",
+            "key2": "value2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "[variables('web-2Name')]",
+      "type": "Microsoft.Web/sites",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2015-08-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]"
+      ],
+      "tags": {
+        "[concat('hidden-related:', resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name')))]": "Resource",
+        "displayName": "web-2"
+      },
+      "properties": {
+        "name": "[variables('web-2Name')]",
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]"
+      },
+      "resources": [
+        {
+          "name": "appsettings",
+          "type": "config",
+          "apiVersion": "2015-08-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', variables('web-2Name'))]"
+          ],
+          "tags": {
+            "displayName": "app-st-2"
+          },
+          "properties": {
+            "key1": "value1",
+            "key2": "value2"
+          }
+        }
+      ]
+    },
+    {
+      "type": "Microsoft.Network/trafficManagerProfiles",
+      "apiVersion": "2018-08-01",
+      "name": "TraficManager",
+      "location": "global",
+      "properties": {
+        "profileStatus": "Enabled",
+        "trafficRoutingMethod": "Performance",
+        "dnsConfig": {
+          "relativeName": "traficmanager209375983456096239",
+          "ttl": 30
+        },
+        "monitorConfig": {
+          "protocol": "HTTPS",
+          "port": 443,
+          "path": "/",
+          "expectedStatusCodeRanges": [
+            {
+              "min": 200,
+              "max": 202
+            },
+            {
+              "min": 301,
+              "max": 302
+            }
+          ]
+        },
+        "endpoints": [
+          {
+            "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
+            "name": "first-endpoint",
+            "properties": {
+              "target": "www.microsoft.com",
+              "endpointStatus": "Enabled",
+              "endpointLocation": "northeurope"
+            }
+          },
+          {
+            "type": "Microsoft.Network/TrafficManagerProfiles/ExternalEndpoints",
+            "name": "seond-endpoint",
+            "properties": {
+              "target": "docs.microsoft.com",
+              "endpointStatus": "Enabled",
+              "endpointLocation": "southcentralus"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "[variables('sql-server-1Name')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "dependsOn": [],
+      "tags": {
+        "displayName": "sql-server-1"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('sql-server-1AdminLogin')]",
+        "administratorLoginPassword": "[parameters('sql-server-1AdminLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "AllowAllWindowsAzureIps",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sql-server-1Name'))]"
+          ],
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "SoftServe-Lviv",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sql-server-1Name'))]"
+          ],
+          "properties": {
+            "startIpAddress": "195.160.232.0",
+            "endIpAddress": "195.160.235.255"
+          }
+        },
+        {
+          "name": "[parameters('db-11Name')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('sql-server-1Name'))]"
+          ],
+          "tags": {
+            "displayName": "db-11"
+          },
+          "properties": {
+            "collation": "[parameters('db-11Collation')]",
+            "edition": "[parameters('db-11Edition')]",
+            "maxSizeBytes": "1073741824",
+            "requestedServiceObjectiveName": "[parameters('db-11RequestedServiceObjectiveName')]"
+          }
+        }
+      ]
+    },
+    {
+      "name": "[variables('stor11Name')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2016-01-01",
+      "sku": {
+        "name": "[parameters('stor11Type')]"
+      },
+      "dependsOn": [],
+      "tags": {
+        "displayName": "stor11"
+      },
+      "kind": "Storage",
+      "properties": {
+        "accountType": "Standard_GRS  "
+      }
+    },
+    {
+      "name": "[concat(parameters('app-sp-1Name'), '-', resourceGroup().name)]",
+      "type": "Microsoft.Insights/autoscalesettings",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]"
+      ],
+      "tags": {
+        "[concat('hidden-link:', resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name')))]": "Resource",
+        "displayName": "ins-11 AutoScale"
+      },
+      "properties": {
+        "name": "[concat(parameters('app-sp-1Name'), '-', resourceGroup().name)]",
+        "profiles": [
+          {
+            "name": "Default",
+            "capacity": {
+              "minimum": 1,
+              "maximum": 2,
+              "default": 1
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT10M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 80
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT10M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT1H",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 60
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT1H"
+                }
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "targetResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-1Name'))]"
+      }
+    },
+    {
+      "name": "ins-11",
+      "type": "Microsoft.Insights/components",
+      "location": "East US",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('web-1Name'))]"
+      ],
+      "tags": {
+        "displayName": "Component ins-11"
+      },
+      "properties": {
+        "applicationId": "[resourceId('Microsoft.Web/sites', variables('web-1Name'))]"
+      }
+    },
+    {
+      "name": "[concat(parameters('app-sp-2Name'), '-', resourceGroup().name)]",
+      "type": "Microsoft.Insights/autoscalesettings",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]"
+      ],
+      "tags": {
+        "[concat('hidden-link:', resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name')))]": "Resource",
+        "displayName": "ins-22 AutoScale"
+      },
+      "properties": {
+        "name": "[concat(parameters('app-sp-2Name'), '-', resourceGroup().name)]",
+        "profiles": [
+          {
+            "name": "Default",
+            "capacity": {
+              "minimum": 1,
+              "maximum": 2,
+              "default": 1
+            },
+            "rules": [
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT10M",
+                  "timeAggregation": "Average",
+                  "operator": "GreaterThan",
+                  "threshold": 80
+                },
+                "scaleAction": {
+                  "direction": "Increase",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT10M"
+                }
+              },
+              {
+                "metricTrigger": {
+                  "metricName": "CpuPercentage",
+                  "metricResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]",
+                  "timeGrain": "PT1M",
+                  "statistic": "Average",
+                  "timeWindow": "PT1H",
+                  "timeAggregation": "Average",
+                  "operator": "LessThan",
+                  "threshold": 60
+                },
+                "scaleAction": {
+                  "direction": "Decrease",
+                  "type": "ChangeCount",
+                  "value": 1,
+                  "cooldown": "PT1H"
+                }
+              }
+            ]
+          }
+        ],
+        "enabled": false,
+        "targetResourceUri": "[resourceId('Microsoft.Web/serverfarms', parameters('app-sp-2Name'))]"
+      }
+    },
+    {
+      "name": "ins-22",
+      "type": "Microsoft.Insights/components",
+      "location": "East US",
+      "apiVersion": "2014-04-01",
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/sites', variables('web-2Name'))]"
+      ],
+      "tags": {
+        "displayName": "Component ins-22"
+      },
+      "properties": {
+        "applicationId": "[resourceId('Microsoft.Web/sites', variables('web-2Name'))]"
+      }
+    },
+    {
+      "type": "Microsoft.ApiManagement/service",
+      "apiVersion": "2020-12-01",
+      "name": "api-managment-fpr-arm",
+      "location": "West Europe",
+      "sku": {
+        "name": "[parameters('sku')]",
+        "capacity": "[parameters('skuCount')]"
+      },
+      "properties": {
+        "publisherEmail": "[parameters('publisherEmail')]",
+        "publisherName": "[parameters('publisherName')]"
+      }
+    }
+
+  ],
+
+
+  ]
+}
